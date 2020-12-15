@@ -105,6 +105,35 @@ describe('test state and park model', () => {
 
   });
 
+  it('return all States', async() => {
+
+    const newStates = await Promise.all([
+      {
+        'stateName': 'New York',
+        'capital': 'Albany',
+        'population': '19450000'
+      },
+      {
+        'stateName': 'California',
+        'capital': 'Sacramento',
+        'population': '39510000'
+      },
+      {
+        'stateName': 'Texas',
+        'capital': 'Austin',
+        'population': '29000000'
+      }
+    ].map(state => State.insert(state)));
+
+    const data = await fakeRequest(app)
+      .get('/state');
+
+    expect(data.body).toEqual(expect.arrayContaining(newStates));
+    expect(data.body).toHaveLength(newStates.length);
+
+  });
+  
+
   it('get State by ID and associated parks', async() => {
 
     const state = await State.insert({
@@ -140,6 +169,27 @@ describe('test state and park model', () => {
     expect(data.body).toEqual({
       ...state,
       parks: expect.arrayContaining(parks)
+    });
+
+
+  });
+
+  it('get State by ID', async() => {
+
+    const state = await State.insert({
+      'stateName': 'New York',
+      'capital': 'Albany',
+      'population': '19450000'
+    });
+
+    const data = await fakeRequest(app)
+      .get(`/state/${state.id}`);
+
+    expect(data.body).toEqual({
+      'id': '1',
+      'stateName': 'New York',
+      'capital': 'Albany',
+      'population': '19450000'
     });
 
 
@@ -183,6 +233,34 @@ describe('test state and park model', () => {
 
   });
 
+  it('update state by ID', async() => {
+
+    const state = await State.insert({
+      'stateName': 'New York',
+      'capital': 'New York City',
+      'population': '19450000'
+    });
+
+    const expectation = 
+      {
+        'id': '1',
+        'stateName': 'New York',
+        'capital': 'Albany',
+        'population': '19450000'
+      };
+
+    const data = await fakeRequest(app)
+      .put(`/state/${state.id}`)
+      .send({
+        'stateName': 'New York',
+        'capital': 'Albany',
+        'population': '19450000'
+      });
+
+    expect(data.body).toEqual(expectation);
+
+  });
+
   it('delete park by ID', async() => {
 
     await State.insert({
@@ -210,6 +288,32 @@ describe('test state and park model', () => {
 
     const data = await fakeRequest(app)
       .delete(`/park/${park.id}`);
+
+    expect(data.body).toEqual(expectation);
+
+
+  });
+
+  it('delete state by ID', async() => {
+
+    const state = await State.insert(
+      {
+        'stateName': 'New York',
+        'capital': 'Albany',
+        'population': '19450000'
+      });
+
+
+    const expectation = 
+      {
+        'id': '1',
+        'stateName': 'New York',
+        'capital': 'Albany',
+        'population': '19450000'
+      };
+
+    const data = await fakeRequest(app)
+      .delete(`/state/${state.id}`);
 
     expect(data.body).toEqual(expectation);
 
